@@ -604,13 +604,17 @@ static void systemHealthCheck(float pressureThreshold) {
   #if defined LEGO_VALVE_RELAY || defined SINGLE_BOARD
   if (!brewState() && !steamState()) {
     if (millis() >= systemHealthTimer) {
-      while (currentState.smoothedPressure >= pressureThreshold && currentState.temperature < STEAM_WAND_HOT_WATER_TEMP)
+      if (currentState.smoothedPressure >= pressureThreshold && currentState.temperature < STEAM_WAND_HOT_WATER_TEMP)
       {
-        lcdShowPopup("Releasing pressure!");
-        setPumpOff();
-        setBoilerOff();
-        openValve();
-        sensorsRead();
+        const float lowerPressureThreshold = 0.75f * pressureThreshold;
+        do
+        {
+          lcdShowPopup("Releasing pressure!");
+          setPumpOff();
+          setBoilerOff();
+          openValve();
+          sensorsRead();
+        } while (currentState.smoothedPressure >= lowerPressureThreshold);
       }
       closeValve();
       systemHealthTimer = millis() + HEALTHCHECK_EVERY;
